@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My AI App - Chat</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f2f2f7; margin:0; padding:20px; }
+    .container { max-width:700px; margin:40px auto; background:white; border-radius:8px; padding:20px; box-shadow:0 4px 18px rgba(0,0,0,0.06); }
+    .messages { height:360px; overflow:auto; border:1px solid #ddd; padding:10px; border-radius:6px; background:#fafafa; }
+    .msg { margin:8px 0; padding:8px 12px; border-radius:6px; display:inline-block; max-width:85%; }
+    .user { background:#dcf8c6; align-self:flex-end; }
+    .bot { background:#fff; border:1px solid #eee; }
+    .row { display:flex; gap:8px; margin-top:12px; }
+    input { flex:1; padding:10px; border-radius:6px; border:1px solid #ccc; }
+    button { padding:10px 14px; border-radius:6px; border:none; background:#0070f3; color:white; cursor:pointer; }
+    button:disabled { opacity:0.6; cursor:not-allowed; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>My AI App — Chat</h2>
+    <div id="messages" class="messages"></div>
+
+    <div class="row">
+      <input id="input" type="text" placeholder="Type a message..." />
+      <button id="send">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const messagesEl = document.getElementById('messages');
+    const inputEl = document.getElementById('input');
+    const sendBtn = document.getElementById('send');
+
+    function addMessage(text, type) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + type;
+      div.textContent = text;
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = inputEl.value.trim();
+      if (!text) return;
+
+      addMessage(text, 'user');
+      inputEl.value = '';
+      sendBtn.disabled = true;
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          addMessage(data.reply, 'bot');
+        } else {
+          addMessage("Error: " + (data.error || "unknown"), 'bot');
+        }
+      } catch (e) {
+        addMessage("Network error: " + e.message, 'bot');
+      }
+
+      sendBtn.disabled = false;
+      inputEl.focus();
+    }
+
+    sendBtn.onclick = sendMessage;
+
+    inputEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    addMessage("Hello! Type something to begin.", "bot");
+  </script>
+</body>
+</html>
