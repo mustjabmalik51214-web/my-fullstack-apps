@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SNOOKER — Created by MUHAMMAD TAQI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+        :root {
+            --bg-dark: #0a0f1d;
+            --gold-primary: #f59e0b;
+            --gold-light: #fbbf24;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.08) 0%, transparent 60%),
+                radial-gradient(circle at 50% 100%, rgba(15, 23, 42, 0.8) 0%, transparent 80%);
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+        }
+
+        .font-cinzel {
+            font-family: 'Cinzel', serif;
+        }
+
+        /* Glassmorphism Panels */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* 2:1 Aspect Ratio responsive canvas container */
+        .table-container {
+            width: min(94vw, 160vh);
+            height: min(47vw, 80vh);
+            max-width: 1040px;
+            max-height: 520px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: 16px;
+            box-shadow: 
+                0 0 0 8px #1a0f0a,
+                0 0 0 12px #3a2214,
+                0 25px 60px rgba(0, 0, 0, 0.95);
+        }
+
+        /* Spin Pad Target Canvas Indicator */
+        #spinCanvas {
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ffffff, #cbd5e1);
+            cursor: crosshair;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.4), 0 0 10px rgba(245, 158, 11, 0.3);
+        }
+
+        /* Power Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            height: 8px;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #fef08a, #d97706);
+            cursor: pointer;
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.7);
+            border: 2px solid #fff;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col justify-between items-center p-2 sm:p-4 text-slate-100 overflow-hidden">
+
+    <!-- Header Section -->
+    <header class="w-full max-w-6xl flex justify-between items-center px-4 py-2 glass-panel rounded-2xl z-10">
+        <div class="flex items-center space-x-3">
+            <div class="p-2 bg-amber-500/10 rounded-xl border border-amber-500/30 text-amber-400">
+                <i data-lucide="trophy" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="font-cinzel text-base sm:text-2xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500 drop-shadow">
+                    SNOOKER
+                </h1>
+                <p class="text-[10px] sm:text-xs font-semibold text-amber-400/90 tracking-wider uppercase">
+                    Created by <span class="text-amber-200 underline decoration-amber-500/50">MUHAMMAD TAQI</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2 sm:space-x-3">
+            <button id="audioToggle" class="p-2 sm:px-3 sm:py-2 bg-slate-800/80 hover:bg-slate-700 rounded-xl border border-slate-700 text-slate-300 flex items-center space-x-1 text-xs transition">
+                <i data-lucide="volume-2" id="soundIcon" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Sound</span>
+            </button>
+
+            <button id="modeBtn" class="p-2 sm:px-3 sm:py-2 bg-indigo-600/80 hover:bg-indigo-500 rounded-xl text-white font-medium flex items-center space-x-1 text-xs transition shadow-lg shadow-indigo-900/30">
+                <i data-lucide="bot" class="w-4 h-4"></i>
+                <span id="modeText" class="hidden sm:inline">vs AI Bot</span>
+            </button>
+
+            <button id="restartBtn" class="p-2 sm:px-3 sm:py-2 bg-amber-600/90 hover:bg-amber-500 rounded-xl text-slate-950 font-bold flex items-center space-x-1 text-xs transition shadow-lg shadow-amber-900/30">
+                <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">New Match</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Game Workspace -->
+    <main class="w-full flex-1 flex flex-col items-center justify-center relative my-1">
+        
+        <!-- Scoreboard Panel -->
+        <div class="w-full max-w-5xl flex justify-between items-center px-4 py-2 mb-1 glass-panel rounded-xl text-xs sm:text-sm">
+            <!-- Player 1 -->
+            <div id="p1Card" class="flex items-center space-x-3 p-1.5 px-3 rounded-lg border border-amber-500/50 bg-amber-500/15 transition-all">
+                <div class="w-3.5 h-3.5 rounded-full bg-amber-400 shadow-sm shadow-amber-400"></div>
+                <div>
+                    <span class="font-semibold text-slate-200 block text-[11px]">PLAYER 1</span>
+                    <span id="p1Score" class="font-bold text-amber-300 text-base leading-none">0</span>
+                </div>
+            </div>
+
+            <!-- Target & Break Center Status -->
+            <div class="flex items-center space-x-4 sm:space-x-8 text-center">
+                <div>
+                    <span class="text-[9px] text-slate-400 uppercase tracking-widest block font-bold">Current Break</span>
+                    <span id="currentBreak" class="font-bold text-amber-400 text-sm sm:text-base">0</span>
+                </div>
+
+                <div class="h-6 w-px bg-slate-700/60"></div>
+
+                <div>
+                    <span class="text-[9px] text-slate-400 uppercase tracking-widest block font-bold">Target Ball</span>
+                    <div id="targetBadge" class="flex items-center justify-center space-x-1.5 font-bold text-xs mt-0.5">
+                        <span id="targetDot" class="w-3 h-3 rounded-full bg-red-600 inline-block shadow-sm"></span>
+                        <span id="targetText" class="text-red-400">RED (1 pt)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player 2 / AI -->
+            <div id="p2Card" class="flex items-center space-x-3 p-1.5 px-3 rounded-lg border border-transparent transition-all opacity-60">
+                <div class="w-3.5 h-3.5 rounded-full bg-indigo-400"></div>
+                <div>
+                    <span id="p2Name" class="font-semibold text-slate-200 block text-[11px]">AI BOT</span>
+                    <span id="p2Score" class="font-bold text-amber-300 text-base leading-none">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Snooker Table Canvas Container -->
+        <div class="table-container relative my-auto">
+            <canvas id="snookerCanvas"></canvas>
+
+            <!-- Turn Banner Notification -->
+            <div id="turnBanner" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-950/90 border border-amber-500/50 backdrop-blur-md px-6 py-2.5 rounded-2xl pointer-events-none opacity-0 transition-opacity duration-300 flex items-center space-x-2 shadow-2xl z-20">
+                <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i>
+                <span id="turnText" class="font-cinzel text-sm sm:text-base text-amber-200 font-bold tracking-wide">Player 1's Turn</span>
+            </div>
+        </div>
+
+        <!-- Control Deck: Power, Fine Aim, Spin Selector -->
+        <div class="w-full max-w-3xl glass-panel p-2.5 sm:p-3 rounded-2xl mt-1 flex items-center justify-between gap-3">
+            
+            <!-- Cue Ball Spin Selector Pad -->
+            <div class="flex flex-col items-center">
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Cue Spin</span>
+                <canvas id="spinCanvas" width="52" height="52"></canvas>
+            </div>
+
+            <!-- Main Power & Aim Controls -->
+            <div class="flex-1 flex flex-col space-y-2">
+                <div class="flex justify-between text-xs text-slate-300 font-medium">
+                    <span class="flex items-center gap-1 text-[11px]"><i data-lucide="crosshair" class="w-3.5 h-3.5 text-amber-400"></i> Drag mouse/touch to Aim</span>
+                    <span id="spinLabel" class="text-amber-300/90 font-semibold text-[11px]">Center Spin</span>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <!-- Fine Aim Controls -->
+                    <button id="aimLeft" class="p-1.5 bg-slate-800 hover:bg-slate-700 active:scale-95 rounded-lg border border-slate-700 text-amber-400">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    </button>
+                    
+                    <input type="range" id="powerSlider" min="1" max="100" value="40" class="w-full cursor-pointer">
+
+                    <button id="aimRight" class="p-1.5 bg-slate-800 hover:bg-slate-700 active:scale-95 rounded-lg border border-slate-700 text-amber-400">
+                        <i data-lucide="rotate-cw" class="w-4 h-4"></i>
+                    </button>
+
+                    <!-- Strike Button -->
+                    <button id="shootBtn" class="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-500/20 text-xs transition active:scale-95 flex items-center gap-1">
+                        <i data-lucide="zap" class="w-3.5 h-3.5 fill-current"></i> STRIKE
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Status -->
+    <footer class="w-full max-w-5xl glass-panel py-1.5 px-4 rounded-xl flex items-center justify-between text-xs z-10">
+        <span class="text-amber-400/80 font-medium flex items-center gap-1 text-[11px]">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Snooker Master Physics Engine
+        </span>
+        <div class="flex items-center space-x-4 text-slate-400 font-medium text-[11px]">
+            <span>Reds Left: <strong id="redsCount" class="text-amber-300">15</strong></span>
+            <span>Highest Break: <strong id="highBreak" class="text-amber-300">0</strong></span>
+        </div>
+    </footer>
+
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-50 hidden">
+        <div class="glass-panel p-6 sm:p-8 rounded-3xl max-w-sm w-full mx-4 text-center border border-amber-500/40 shadow-2xl flex flex-col items-center">
+            <div class="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center text-amber-400 mb-3 border border-amber-500/40">
+                <i data-lucide="award" class="w-8 h-8"></i>
+            </div>
+            <h2 id="winnerText" class="font-cinzel text-2xl font-extrabold text-amber-300 mb-1">PLAYER 1 WINS!</h2>
+            <p id="winnerScore" class="text-xs text-slate-300 mb-2">Final Score: 78 - 32</p>
+            <p class="text-[11px] text-amber-400/90 uppercase tracking-widest font-bold mb-6">Created by MUHAMMAD TAQI</p>
+            <button id="modalPlayAgain" class="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-500/20 transition transform active:scale-95">
+                Play New Frame
+            </button>
+        </div>
+    </div>
+
+    <!-- SNOOKER PHYSICS ENGINE & APPLICATION SCRIPT -->
+    <script>
+        // Init Lucide Icons
+        lucide.createIcons();
+
+        // --- WEB AUDIO API SYNTHESIZER ---
+        class SnookerAudio {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+            }
+
+            playCueStrike(power = 1) {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(150 + power * 60, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.12);
+
+                gain.gain.setValueAtTime(Math.min(power, 1) * 0.9, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.12);
+            }
+
+            playCollision(vol = 1) {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800 + Math.random() * 120, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(220, this.ctx.currentTime + 0.04);
+
+                gain.gain.setValueAtTime(Math.min(vol, 1) * 0.7, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.04);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.04);
+            }
+
+            playPocket() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(240, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.25);
+
+                gain.gain.setValueAtTime(0.65, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.25);
+            }
+
+            playFoul() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+                osc.frequency.setValueAtTime(120, this.ctx.currentTime + 0.15);
+
+                gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.35);
+            }
+        }
+
+        const audio = new SnookerAudio();
+
+        // --- SNOOKER TABLE CONSTANTS & SPECS ---
+        const TABLE_WIDTH = 960;  // 2:1 native ratio
+        const TABLE_HEIGHT = 480;
+        const CUSHION = 38;
+        const INNER_W = TABLE_WIDTH - CUSHION * 2;
+        const INNER_H = TABLE_HEIGHT - CUSHION * 2;
+        const BALL_R = 9.2;
+        const POCKET_R = 21;
+
+        const FRICTION = 0.988;
+        const RESTITUTION = 0.94;
+
+        const BALL_TYPES = {
+            WHITE: { name: 'White', color: '#f8fafc', pts: 0, spotRatio: { x: 0.2, y: 0.5 } },
+            RED: { name: 'Red', color: '#dc2626', pts: 1 },
+            YELLOW: { name: 'Yellow', color: '#eab308', pts: 2, spotRatio: { x: 0.2, y: 0.65 } },
+            GREEN: { name: 'Green', color: '#16a34a', pts: 3, spotRatio: { x: 0.2, y: 0.35 } },
+            BROWN: { name: 'Brown', color: '#a16207', pts: 4, spotRatio: { x: 0.2, y: 0.5 } },
+            BLUE: { name: 'Blue', color: '#2563eb', pts: 5, spotRatio: { x: 0.5, y: 0.5 } },
+            PINK: { name: 'Pink', color: '#ec4899', pts: 6, spotRatio: { x: 0.73, y: 0.5 } },
+            BLACK: { name: 'Black', color: '#0f172a', pts: 7, spotRatio: { x: 0.88, y: 0.5 } }
+        };
+
+        // --- GAME ENGINE STATE ---
+        let canvas, ctx;
+        let balls = [];
+        let cueBall = null;
+        let isVsAI = true;
+        let currentPlayer = 1;
+        let scores = { 1: 0, 2: 0 };
+        let breakScore = 0;
+        let highestBreak = 0;
+
+        let targetType = 'RED'; // 'RED', 'COLOR', or specific color string
+        let inEndgameSequence = false;
+        const endgameColorsOrder = ['YELLOW', 'GREEN', 'BROWN', 'BLUE', 'PINK', 'BLACK'];
+        let endgameColorIndex = 0;
+
+        let aimAngle = 0;
+        let spinOffset = { x: 0, y: 0 }; // Cue Ball spin offset (-1 to 1)
+        let isMoving = false;
+        let turnPocketedBalls = [];
+        let firstHitBall = null;
+        let gameOver = false;
+
+        // Table Pocket Centers
+        const pockets = [
+            { x: CUSHION + 4, y: CUSHION + 4 },                         // Top-Left
+            { x: TABLE_WIDTH / 2, y: CUSHION - 4 },                     // Top-Center
+            { x: TABLE_WIDTH - CUSHION - 4, y: CUSHION + 4 },           // Top-Right
+            { x: CUSHION + 4, y: TABLE_HEIGHT - CUSHION - 4 },          // Bottom-Left
+            { x: TABLE_WIDTH / 2, y: TABLE_HEIGHT - CUSHION + 4 },      // Bottom-Center
+            { x: TABLE_WIDTH - CUSHION - 4, y: TABLE_HEIGHT - CUSHION - 4 } // Bottom-Right
+        ];
+
+        // --- BALL CLASS ---
+        class Ball {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.vx = 0;
+                this.vy = 0;
+                this.spinX = 0; // Sidespin
+                this.spinY = 0; // Top/Backspin
+                this.type = type;
+                this.radius = BALL_R;
+                this.isPocketed = false;
+            }
+
+            update() {
+                if (this.isPocketed) return;
+
+                // Apply spin effect on velocity
+                this.vx += this.spinX * 0.02;
+                this.vy += this.spinY * 0.02;
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Deceleration & Friction
+                this.vx *= FRICTION;
+                this.vy *= FRICTION;
+                this.spinX *= 0.95;
+                this.spinY *= 0.95;
+
+                if (Math.abs(this.vx) < 0.02) this.vx = 0;
+                if (Math.abs(this.vy) < 0.02) this.vy = 0;
+
+                // Cushion Bounces with spin reflection angle
+                const minX = CUSHION + this.radius;
+                const maxX = TABLE_WIDTH - CUSHION - this.radius;
+                const minY = CUSHION + this.radius;
+                const maxY = TABLE_HEIGHT - CUSHION - this.radius;
+
+                if (this.x < minX) {
+                    this.x = minX;
+                    this.vx = -this.vx * RESTITUTION;
+                    this.vy += this.spinX * 0.5; // Sidespin angle alter
+                    audio.playCollision(0.25);
+                }
+                if (this.x > maxX) {
+                    this.x = maxX;
+                    this.vx = -this.vx * RESTITUTION;
+                    this.vy -= this.spinX * 0.5;
+                    audio.playCollision(0.25);
+                }
+                if (this.y < minY) {
+                    this.y = minY;
+                    this.vy = -this.vy * RESTITUTION;
+                    this.vx -= this.spinX * 0.5;
+                    audio.playCollision(0.25);
+                }
+                if (this.y > maxY) {
+                    this.y = maxY;
+                    this.vy = -this.vy * RESTITUTION;
+                    this.vx += this.spinX * 0.5;
+                    audio.playCollision(0.25);
+                }
+
+                // Pocket Gravity Funneling
+                pockets.forEach(p => {
+                    const dx = p.x - this.x;
+                    const dy = p.y - this.y;
+                    const dist = Math.hypot(dx, dy);
+
+                    if (dist < POCKET_R * 1.25) {
+                        this.vx += (dx / dist) * 0.25;
+                        this.vy += (dy / dist) * 0.25;
+                    }
+                });
+            }
+
+            draw(ctx) {
+                if (this.isPocketed) return;
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+
+                // Ball Cast Shadow
+                ctx.shadowColor = 'rgba(0,0,0,0.65)';
+                ctx.shadowBlur = 8;
+                ctx.shadowOffsetY = 4;
+
+                // 3D Sphere Radial Gradient
+                const grad = ctx.createRadialGradient(
+                    this.x - this.radius * 0.35, this.y - this.radius * 0.35, this.radius * 0.1,
+                    this.x, this.y, this.radius
+                );
+
+                if (this.type === BALL_TYPES.WHITE) {
+                    grad.addColorStop(0, '#ffffff');
+                    grad.addColorStop(0.75, '#e2e8f0');
+                    grad.addColorStop(1, '#94a3b8');
+                } else if (this.type === BALL_TYPES.BLACK) {
+                    grad.addColorStop(0, '#475569');
+                    grad.addColorStop(0.7, '#0f172a');
+                    grad.addColorStop(1, '#020617');
+                } else {
+                    grad.addColorStop(0, '#ffffff');
+                    grad.addColorStop(0.2, this.type.color);
+                    grad.addColorStop(1, '#000000');
+                }
+
+                ctx.fillStyle = grad;
+                ctx.fill();
+
+                // Specular Shine
+                ctx.shadowBlur = 0;
+                ctx.beginPath();
+                ctx.arc(this.x - this.radius * 0.3, this.y - this.radius * 0.3, this.radius * 0.25, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        // --- INITIALIZATION ---
+        function initGame() {
+            canvas = document.getElementById('snookerCanvas');
+            canvas.width = TABLE_WIDTH;
+            canvas.height = TABLE_HEIGHT;
+            ctx = canvas.getContext('2d');
+
+            setupEvents();
+            initSpinSelector();
+            resetMatch();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function resetMatch() {
+            balls = [];
+            scores = { 1: 0, 2: 0 };
+            breakScore = 0;
+            highestBreak = 0;
+            targetType = 'RED';
+            inEndgameSequence = false;
+            endgameColorIndex = 0;
+            currentPlayer = 1;
+            gameOver = false;
+
+            document.getElementById('gameOverModal').classList.add('hidden');
+
+            // 1. Cue Ball
+            cueBall = new Ball(
+                CUSHION + INNER_W * BALL_TYPES.WHITE.spotRatio.x,
+                CUSHION + INNER_H * BALL_TYPES.WHITE.spotRatio.y,
+                BALL_TYPES.WHITE
+            );
+            balls.push(cueBall);
+
+            // 2. Color Balls on Designated Spots
+            ['YELLOW', 'GREEN', 'BROWN', 'BLUE', 'PINK', 'BLACK'].forEach(key => {
+                const bType = BALL_TYPES[key];
+                const b = new Ball(
+                    CUSHION + INNER_W * bType.spotRatio.x,
+                    CUSHION + INNER_H * bType.spotRatio.y,
+                    bType
+                );
+                balls.push(b);
+            });
+
+            // 3. 15 Red Balls Pack Behind Pink Spot
+            const pinkX = CUSHION + INNER_W * BALL_TYPES.PINK.spotRatio.x;
+            const pinkY = CUSHION + INNER_H * BALL_TYPES.PINK.spotRatio.y;
+            const startX = pinkX + BALL_R * 2 + 3;
+            const startY = pinkY;
+
+            let row = 0;
+            let col = 0;
+            for (let i = 0; i < 15; i++) {
+                const x = startX + row * (BALL_R * 1.75);
+                const y = startY - (row * BALL_R) + (col * BALL_R * 2.05);
+
+                balls.push(new Ball(x, y, BALL_TYPES.RED));
+
+                col++;
+                if (col > row) {
+                    row++;
+                    col = 0;
+                }
+            }
+
+            aimAngle = 0;
+            spinOffset = { x: 0, y: 0 };
+            drawSpinSelector();
+            updateUI();
+        }
+
+        // --- DRAWING FUNCTIONS ---
+        function drawTable() {
+            // Wood Rim Frame
+            ctx.fillStyle = '#1a0f0a';
+            ctx.fillRect(0, 0, TABLE_WIDTH, TABLE_HEIGHT);
+
+            // Green Baize Surface
+            const baizeGrad = ctx.createRadialGradient(
+                TABLE_WIDTH / 2, TABLE_HEIGHT / 2, 100,
+                TABLE_WIDTH / 2, TABLE_HEIGHT / 2, TABLE_WIDTH / 2
+            );
+            baizeGrad.addColorStop(0, '#15803d');
+            baizeGrad.addColorStop(1, '#0b401f');
+
+            ctx.fillStyle = baizeGrad;
+            ctx.fillRect(CUSHION, CUSHION, INNER_W, INNER_H);
+
+            // Cushions Outer Border
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = '#062412';
+            ctx.strokeRect(CUSHION + 1, CUSHION + 1, INNER_W - 2, INNER_H - 2);
+
+            // Baulk Line & D-Zone Arc
+            const baulkX = CUSHION + INNER_W * 0.2;
+            ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+            ctx.lineWidth = 1.8;
+
+            ctx.beginPath();
+            ctx.moveTo(baulkX, CUSHION);
+            ctx.lineTo(baulkX, TABLE_HEIGHT - CUSHION);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(baulkX, TABLE_HEIGHT / 2, INNER_H * 0.15, Math.PI / 2, -Math.PI / 2, false);
+            ctx.stroke();
+
+            // Spots Markings
+            ['BROWN', 'BLUE', 'PINK', 'BLACK'].forEach(k => {
+                const b = BALL_TYPES[k];
+                ctx.beginPath();
+                ctx.arc(CUSHION + INNER_W * b.spotRatio.x, CUSHION + INNER_H * b.spotRatio.y, 2, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,255,255,0.45)';
+                ctx.fill();
+            });
+
+            // Brass/Gold Rim Pocket Openings
+            pockets.forEach(p => {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, POCKET_R, 0, Math.PI * 2);
+                ctx.fillStyle = '#020617';
+                ctx.fill();
+
+                ctx.lineWidth = 3.5;
+                ctx.strokeStyle = '#d97706'; // Brass/gold rim
+                ctx.stroke();
+                ctx.restore();
+            });
+        }
+
+        function drawCueAndAimLine() {
+            if (isMoving || cueBall.isPocketed || (isVsAI && currentPlayer === 2)) return;
+
+            // 1. Raycast Aim Line & Reflection Trajectory
+            let lineEndX = cueBall.x + Math.cos(aimAngle) * 400;
+            let lineEndY = cueBall.y + Math.sin(aimAngle) * 400;
+            let hitBall = null;
+            let closestDist = Infinity;
+
+            // Check collision with balls along ray
+            balls.forEach(b => {
+                if (b === cueBall || b.isPocketed) return;
+
+                const dx = b.x - cueBall.x;
+                const dy = b.y - cueBall.y;
+                const proj = dx * Math.cos(aimAngle) + dy * Math.sin(aimAngle);
+
+                if (proj > 0) {
+                    const perpDist = Math.abs(-dx * Math.sin(aimAngle) + dy * Math.cos(aimAngle));
+                    if (perpDist < BALL_R * 2) {
+                        const hitDist = proj - Math.sqrt(Math.pow(BALL_R * 2, 2) - Math.pow(perpDist, 2));
+                        if (hitDist < closestDist) {
+                            closestDist = hitDist;
+                            hitBall = b;
+                        }
+                    }
+                }
+            });
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(cueBall.x, cueBall.y);
+
+            if (hitBall) {
+                lineEndX = cueBall.x + Math.cos(aimAngle) * closestDist;
+                lineEndY = cueBall.y + Math.sin(aimAngle) * closestDist;
+
+                ctx.lineTo(lineEndX, lineEndY);
+                ctx.setLineDash([5, 5]);
+                ctx.strokeStyle = 'rgba(251, 191, 36, 0.85)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Target Ghost Ball Circle
+                ctx.beginPath();
+                ctx.arc(lineEndX, lineEndY, BALL_R, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(251, 191, 36, 0.9)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Target Ball Deflection Vector
+                const hitAngle = Math.atan2(hitBall.y - lineEndY, hitBall.x - lineEndX);
+                ctx.beginPath();
+                ctx.moveTo(hitBall.x, hitBall.y);
+                ctx.lineTo(hitBall.x + Math.cos(hitAngle) * 45, hitBall.y + Math.sin(hitAngle) * 45);
+                ctx.setLineDash([3, 3]);
+                ctx.strokeStyle = 'rgba(239, 68, 68, 0.85)';
+                ctx.stroke();
+
+            } else {
+                ctx.lineTo(lineEndX, lineEndY);
+                ctx.setLineDash([5, 5]);
+                ctx.strokeStyle = 'rgba(251, 191, 36, 0.6)';
+                ctx.lineWidth = 1.8;
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            // 2. Cue Stick Rendering
+            const powerVal = parseFloat(document.getElementById('powerSlider').value);
+            const cueOffset = 22 + (powerVal * 0.4);
+
+            const cueX = cueBall.x - Math.cos(aimAngle) * cueOffset;
+            const cueY = cueBall.y - Math.sin(aimAngle) * cueOffset;
+            const cueEndX = cueBall.x - Math.cos(aimAngle) * (cueOffset + 240);
+            const cueEndY = cueBall.y - Math.sin(aimAngle) * (cueOffset + 240);
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(cueX, cueY);
+            ctx.lineTo(cueEndX, cueEndY);
+            ctx.lineWidth = 5.5;
+            ctx.strokeStyle = '#d97706';
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // Cue Chalk Tip
+            ctx.beginPath();
+            ctx.moveTo(cueX, cueY);
+            ctx.lineTo(cueX - Math.cos(aimAngle) * 8, cueY - Math.sin(aimAngle) * 8);
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = '#38bdf8';
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // --- SUB-STEPPED PHYSICS ENGINE ---
+        function updatePhysics() {
+            const SUB_STEPS = 8; // 8 sub-steps per frame for precision
+            let stillMoving = false;
+
+            for (let step = 0; step < SUB_STEPS; step++) {
+                balls.forEach(b => {
+                    if (!b.isPocketed) {
+                        b.update();
+                        if (Math.hypot(b.vx, b.vy) > 0.03) stillMoving = true;
+                    }
+                });
+
+                // Elastic Ball Collisions
+                for (let i = 0; i < balls.length; i++) {
+                    for (let j = i + 1; j < balls.length; j++) {
+                        const b1 = balls[i];
+                        const b2 = balls[j];
+
+                        if (b1.isPocketed || b2.isPocketed) continue;
+
+                        const dx = b2.x - b1.x;
+                        const dy = b2.y - b1.y;
+                        const dist = Math.hypot(dx, dy);
+                        const minDist = b1.radius + b2.radius;
+
+                        if (dist < minDist) {
+                            if (b1 === cueBall && !firstHitBall) firstHitBall = b2;
+                            if (b2 === cueBall && !firstHitBall) firstHitBall = b1;
+
+                            // Overlap resolution
+                            const overlap = minDist - dist;
+                            const nx = dx / (dist || 1);
+                            const ny = dy / (dist || 1);
+
+                            b1.x -= nx * overlap * 0.5;
+                            b1.y -= ny * overlap * 0.5;
+                            b2.x += nx * overlap * 0.5;
+                            b2.y += ny * overlap * 0.5;
+
+                            // Velocity transfer
+                            const kx = b1.vx - b2.vx;
+                            const ky = b1.vy - b2.vy;
+                            const p = 2 * (nx * kx + ny * ky) / 2;
+
+                            b1.vx -= p * nx;
+                            b1.vy -= p * ny;
+                            b2.vx += p * nx;
+                            b2.vy += p * ny;
+
+                            const impact = Math.hypot(kx, ky);
+                            if (impact > 0.3 && step === 0) audio.playCollision(impact / 10);
+                        }
+                    }
+                }
+
+                // Pocket Drops
+                balls.forEach(b => {
+                    if (b.isPocketed) return;
+
+                    pockets.forEach(pkt => {
+                        const dist = Math.hypot(b.x - pkt.x, b.y - pkt.y);
+                        if (dist < POCKET_R - 2) {
+                            b.isPocketed = true;
+                            b.vx = 0;
+                            b.vy = 0;
+                            if (step === 0) audio.playPocket();
+                            turnPocketedBalls.push(b);
+                        }
+                    });
+                });
+            }
+
+            // Turn evaluation on complete rest
+            if (isMoving && !stillMoving) {
+                isMoving = false;
+                processTurnRules();
+            }
+        }
+
+        // --- SNOOKER ENGINE RULES EVALUATOR ---
+        function processTurnRules() {
+            let foul = false;
+            let foulPoints = 4;
+
+            // 1. Cue Ball Pocketed
+            if (cueBall.isPocketed) {
+                foul = true;
+                showBanner("FOUL! Cue Ball Pocketed (-4)");
+                respotCueBall();
+            }
+
+            // 2. First Ball Contact Validation
+            if (!foul && !firstHitBall) {
+                foul = true;
+                showBanner("FOUL! Missed all balls (-4)");
+            } else if (!foul && firstHitBall) {
+                if (targetType === 'RED' && firstHitBall.type !== BALL_TYPES.RED) {
+                    foul = true;
+                    foulPoints = Math.max(4, firstHitBall.type.pts);
+                    showBanner(`FOUL! Hit ${firstHitBall.type.name} first (-${foulPoints})`);
+                } else if (targetType === 'COLOR' && firstHitBall.type === BALL_TYPES.RED) {
+                    foul = true;
+                    showBanner(`FOUL! Hit Red instead of Color (-4)`);
+                } else if (inEndgameSequence) {
+                    const reqColor = endgameColorsOrder[endgameColorIndex];
+                    if (firstHitBall.type !== BALL_TYPES[reqColor]) {
+                        foul = true;
+                        foulPoints = Math.max(4, firstHitBall.type.pts);
+                        showBanner(`FOUL! Hit wrong ball (-${foulPoints})`);
+                    }
+                }
+            }
+
+            // 3. Process Pocketed Balls
+            let pointsScored = 0;
+            let legalBallPocketed = false;
+
+            turnPocketedBalls.forEach(b => {
+                if (b === cueBall) return;
+
+                if (foul) {
+                    if (b.type !== BALL_TYPES.RED) respotColor(b);
+                } else {
+                    if (targetType === 'RED' && b.type === BALL_TYPES.RED) {
+                        pointsScored += b.type.pts;
+                        legalBallPocketed = true;
+                    } else if (targetType === 'COLOR' && b.type !== BALL_TYPES.RED) {
+                        pointsScored += b.type.pts;
+                        legalBallPocketed = true;
+                        respotColor(b);
+                    } else if (inEndgameSequence && b.type === BALL_TYPES[endgameColorsOrder[endgameColorIndex]]) {
+                        pointsScored += b.type.pts;
+                        legalBallPocketed = true;
+                        endgameColorIndex++;
+                    } else {
+                        foul = true;
+                        foulPoints = Math.max(4, b.type.pts);
+                        showBanner(`FOUL! Pocketed wrong ball (-${foulPoints})`);
+                        if (b.type !== BALL_TYPES.RED) respotColor(b);
+                    }
+                }
+            });
+
+            // 4. Update Turn & Scores
+            if (foul) {
+                audio.playFoul();
+                const otherPlayer = currentPlayer === 1 ? 2 : 1;
+                scores[otherPlayer] += foulPoints;
+                breakScore = 0;
+                switchTurn();
+            } else if (legalBallPocketed) {
+                scores[currentPlayer] += pointsScored;
+                breakScore += pointsScored;
+                if (breakScore > highestBreak) highestBreak = breakScore;
+
+                const remainingReds = balls.filter(b => !b.isPocketed && b.type === BALL_TYPES.RED).length;
+
+                if (remainingReds === 0 && !inEndgameSequence) {
+                    inEndgameSequence = true;
+                    endgameColorIndex = 0;
+                    targetType = endgameColorsOrder[endgameColorIndex];
+                } else if (!inEndgameSequence) {
+                    targetType = (targetType === 'RED') ? 'COLOR' : 'RED';
+                } else {
+                    if (endgameColorIndex < endgameColorsOrder.length) {
+                        targetType = endgameColorsOrder[endgameColorIndex];
+                    } else {
+                        endGame();
+                        return;
+                    }
+                }
+            } else {
+                breakScore = 0;
+                const remainingReds = balls.filter(b => !b.isPocketed && b.type === BALL_TYPES.RED).length;
+                if (remainingReds === 0 && !inEndgameSequence) {
+                    inEndgameSequence = true;
+                    endgameColorIndex = 0;
+                }
+                targetType = inEndgameSequence ? endgameColorsOrder[endgameColorIndex] : 'RED';
+                switchTurn();
+            }
+
+            firstHitBall = null;
+            turnPocketedBalls = [];
+            updateUI();
+
+            if (isVsAI && currentPlayer === 2 && !gameOver) {
+                setTimeout(makeAIMove, 1000);
+            }
+        }
+
+        function switchTurn() {
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+            showBanner(currentPlayer === 1 ? "Player 1's Turn" : (isVsAI ? "AI's Turn" : "Player 2's Turn"));
+        }
+
+        function respotCueBall() {
+            cueBall.isPocketed = false;
+            cueBall.x = CUSHION + INNER_W * BALL_TYPES.WHITE.spotRatio.x;
+            cueBall.y = CUSHION + INNER_H * BALL_TYPES.WHITE.spotRatio.y;
+            cueBall.vx = 0;
+            cueBall.vy = 0;
+        }
+
+        function respotColor(ball) {
+            ball.isPocketed = false;
+            ball.x = CUSHION + INNER_W * ball.type.spotRatio.x;
+            ball.y = CUSHION + INNER_H * ball.type.spotRatio.y;
+            ball.vx = 0;
+            ball.vy = 0;
+        }
+
+        // --- SMART AI BOT ENGINE ---
+        function makeAIMove() {
+            if (gameOver || currentPlayer !== 2) return;
+
+            const activeBalls = balls.filter(b => !b.isPocketed && b !== cueBall);
+            if (activeBalls.length === 0) return;
+
+            let targetBall = null;
+            if (targetType === 'RED') {
+                targetBall = activeBalls.find(b => b.type === BALL_TYPES.RED);
+            } else if (targetType === 'COLOR') {
+                targetBall = activeBalls.find(b => b.type !== BALL_TYPES.RED);
+            } else {
+                targetBall = activeBalls.find(b => b.type === BALL_TYPES[targetType]);
+            }
+
+            if (!targetBall) targetBall = activeBalls[0];
+
+            aimAngle = Math.atan2(targetBall.y - cueBall.y, targetBall.x - cueBall.x) + (Math.random() - 0.5) * 0.08;
+            const power = 20 + Math.random() * 15;
+
+            executeShot(power);
+        }
+
+        function executeShot(powerVal) {
+            if (isMoving) return;
+
+            const power = Math.min(powerVal, 100) * 0.28;
+            cueBall.vx = Math.cos(aimAngle) * power;
+            cueBall.vy = Math.sin(aimAngle) * power;
+
+            // Apply spin to cue ball velocity
+            cueBall.spinX = spinOffset.x * power;
+            cueBall.spinY = spinOffset.y * power;
+
+            isMoving = true;
+            audio.playCueStrike(power / 25);
+        }
+
+        // --- CUE BALL SPIN SELECTOR ---
+        function initSpinSelector() {
+            const spinC = document.getElementById('spinCanvas');
+            const sCtx = spinC.getContext('2d');
+
+            spinC.addEventListener('pointerdown', handleSpin);
+            spinC.addEventListener('pointermove', (e) => {
+                if (e.buttons === 1) handleSpin(e);
+            });
+
+            function handleSpin(e) {
+                const rect = spinC.getBoundingClientRect();
+                const x = (e.clientX - rect.left) - 26;
+                const y = (e.clientY - rect.top) - 26;
+                const dist = Math.hypot(x, y);
+
+                if (dist <= 22) {
+                    spinOffset.x = x / 22;
+                    spinOffset.y = y / 22;
+                    drawSpinSelector();
+                }
+            }
+        }
+
+        function drawSpinSelector() {
+            const spinC = document.getElementById('spinCanvas');
+            const sCtx = spinC.getContext('2d');
+            sCtx.clearRect(0, 0, 52, 52);
+
+            // Ball Surface
+            const grad = sCtx.createRadialGradient(18, 18, 3, 26, 26, 26);
+            grad.addColorStop(0, '#ffffff');
+            grad.addColorStop(0.8, '#cbd5e1');
+            grad.addColorStop(1, '#64748b');
+
+            sCtx.fillStyle = grad;
+            sCtx.beginPath();
+            sCtx.arc(26, 26, 24, 0, Math.PI * 2);
+            sCtx.fill();
+
+            // Red Spin Dot Pointer
+            const dotX = 26 + spinOffset.x * 18;
+            const dotY = 26 + spinOffset.y * 18;
+
+            sCtx.beginPath();
+            sCtx.arc(dotX, dotY, 4, 0, Math.PI * 2);
+            sCtx.fillStyle = '#ef4444';
+            sCtx.fill();
+            sCtx.strokeStyle = '#fff';
+            sCtx.lineWidth = 1;
+            sCtx.stroke();
+
+            // Label Update
+            let text = "Center Spin";
+            if (spinOffset.y < -0.3) text = "Topspin";
+            if (spinOffset.y > 0.3) text = "Backspin/Draw";
+            if (spinOffset.x < -0.3) text += " Left";
+            if (spinOffset.x > 0.3) text += " Right";
+            document.getElementById('spinLabel').textContent = text;
+        }
+
+        // --- CONTROLS & LISTENERS ---
+        function setupEvents() {
+            canvas.addEventListener('pointermove', (e) => {
+                if (isMoving || (isVsAI && currentPlayer === 2)) return;
+
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = TABLE_WIDTH / rect.width;
+                const scaleY = TABLE_HEIGHT / rect.height;
+
+                const mx = (e.clientX - rect.left) * scaleX;
+                const my = (e.clientY - rect.top) * scaleY;
+
+                aimAngle = Math.atan2(my - cueBall.y, mx - cueBall.x);
+            });
+
+            document.getElementById('shootBtn').addEventListener('click', () => {
+                if (!isMoving && !(isVsAI && currentPlayer === 2)) {
+                    const pVal = document.getElementById('powerSlider').value;
+                    executeShot(parseFloat(pVal));
+                }
+            });
+
+            // Fine Aim Adjustments
+            document.getElementById('aimLeft').addEventListener('click', () => aimAngle -= 0.02);
+            document.getElementById('aimRight').addEventListener('click', () => aimAngle += 0.02);
+
+            // Header Controls
+            document.getElementById('restartBtn').addEventListener('click', resetMatch);
+            document.getElementById('modalPlayAgain').addEventListener('click', resetMatch);
+
+            document.getElementById('modeBtn').addEventListener('click', () => {
+                isVsAI = !isVsAI;
+                document.getElementById('modeText').textContent = isVsAI ? 'vs AI Bot' : '2 Player';
+                document.getElementById('p2Name').textContent = isVsAI ? 'AI BOT' : 'PLAYER 2';
+                resetMatch();
+            });
+
+            document.getElementById('audioToggle').addEventListener('click', () => {
+                audio.muted = !audio.muted;
+                document.getElementById('soundIcon').setAttribute('data-lucide', audio.muted ? 'volume-x' : 'volume-2');
+                lucide.createIcons();
+            });
+        }
+
+        function updateUI() {
+            document.getElementById('p1Score').textContent = scores[1];
+            document.getElementById('p2Score').textContent = scores[2];
+            document.getElementById('currentBreak').textContent = breakScore;
+            document.getElementById('highBreak').textContent = highestBreak;
+
+            const remainingReds = balls.filter(b => !b.isPocketed && b.type === BALL_TYPES.RED).length;
+            document.getElementById('redsCount').textContent = remainingReds;
+
+            // Player Turn Highlight
+            const p1Card = document.getElementById('p1Card');
+            const p2Card = document.getElementById('p2Card');
+
+            if (currentPlayer === 1) {
+                p1Card.className = "flex items-center space-x-3 p-1.5 px-3 rounded-lg border border-amber-500/50 bg-amber-500/20 shadow-lg transition-all";
+                p2Card.className = "flex items-center space-x-3 p-1.5 px-3 rounded-lg border border-transparent transition-all opacity-60";
+            } else {
+                p2Card.className = "flex items-center space-x-3 p-1.5 px-3 rounded-lg border border-indigo-500/50 bg-indigo-500/20 shadow-lg transition-all";
+                p1Card.className = "flex items-center space-x-3 p-1.5 px-3 rounded-lg border border-transparent transition-all opacity-60";
+            }
+
+            // Target Ball Badge
+            const dot = document.getElementById('targetDot');
+            const text = document.getElementById('targetText');
+
+            if (targetType === 'RED') {
+                dot.style.backgroundColor = '#dc2626';
+                text.textContent = "RED (1 pt)";
+                text.className = "text-red-400";
+            } else if (targetType === 'COLOR') {
+                dot.style.backgroundColor = '#eab308';
+                text.textContent = "ANY COLOR";
+                text.className = "text-amber-300";
+            } else {
+                const b = BALL_TYPES[targetType];
+                dot.style.backgroundColor = b.color;
+                text.textContent = `${b.name.toUpperCase()} (${b.pts} pts)`;
+                text.className = "text-amber-200";
+            }
+        }
+
+        function showBanner(text) {
+            const banner = document.getElementById('turnBanner');
+            document.getElementById('turnText').textContent = text;
+            banner.classList.remove('opacity-0');
+            setTimeout(() => banner.classList.add('opacity-0'), 1800);
+        }
+
+        function endGame() {
+            gameOver = true;
+            const modal = document.getElementById('gameOverModal');
+            const winnerTxt = document.getElementById('winnerText');
+            const scoreTxt = document.getElementById('winnerScore');
+
+            let winner = "PLAYER 1";
+            if (scores[2] > scores[1]) winner = isVsAI ? "AI BOT" : "PLAYER 2";
+            else if (scores[1] === scores[2]) winner = "DRAW MATCH";
+
+            winnerTxt.textContent = `${winner} WINS!`;
+            scoreTxt.textContent = `Final Score: ${scores[1]} - ${scores[2]}`;
+            modal.classList.remove('hidden');
+        }
+
+        // --- MAIN LOOP ---
+        function gameLoop() {
+            ctx.clearRect(0, 0, TABLE_WIDTH, TABLE_HEIGHT);
+
+            drawTable();
+            updatePhysics();
+            drawCueAndAimLine();
+
+            balls.forEach(b => b.draw(ctx));
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Window Load Entry Point
+        window.onload = initGame;
+    </script>
+</body>
+</html>
